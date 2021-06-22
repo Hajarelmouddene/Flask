@@ -96,3 +96,89 @@ def test_all_users(test_app, test_database, add_user):
     assert "sara@gmail.com" in data[0]["email"]
     assert "selma" in data[1]["username"]
     assert "selma@gmail.com" in data[1]["email"]
+
+
+# Delete a user
+
+
+def test_remove_user(test_app, test_database, add_user):
+    # clear table
+    test_database.session.query(User).delete()
+    # add to be removed user
+    user = add_user("hajar", "hajar@gmail.com")
+    client = test_app.test_client()
+    resp_one = client.get("/users")
+    data = json.loads(resp_one.data.decode())
+    assert resp_one.status_code == 200
+    assert len(data) == 1
+
+    resp_two = client.delete(f"/users/{user.id}")
+    data = json.loads(resp_two.data.decode())
+    assert resp_two.status_code == 200
+    assert  'hajar@gmail.com was removed.' in data['message']
+
+    resp_three = client.get("/users")
+    data = json.loads(resp_three.data.decode())
+    assert resp_three.status_code == 200
+    assert len(data) == 0
+
+
+def test_remove_user_incorrect_id(test_app, test_database):
+    client = test_app.test_client()
+    resp = client.delete("/users/999")
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 404
+    assert "User 999 does not exist" in data["message"]
+
+def test_update_user(test_app, test_database, add_user):
+    user = add_user("hajar", "hajar@gmail.com")
+    client = test_app.test_client()
+    resp_one = client.put(
+        f"users/{user.id}",
+        data=json.dumps({"username": "sara", "email": "sara@gmail.com"}),
+        content_type = "application/json",
+    )
+    data = json.loads(resp_one.data.decode())
+    assert resp_one.status_code == 200
+    assert f"{user.id} was updated!" in data["message"]
+
+    resp_two = client.get(f"/users/{user.id}")
+    data = json.loads(resp_two.data.decode())
+    assert resp_two.status_code == 200
+    assert "sara" in data["username"]
+    assert "sara@gmail.com" in data["email"]
+
+
+def test_update_user_invalid_json(test_app, test_database):
+    client = test_app.test_client()
+    resp = client.put(
+        "/users/1",
+        data=json.dumps({}),
+        content_type = "application/json",
+    )
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 400
+    assert "Input payload validation failed" in data["message"]
+
+def test_update_user_invalid_json_keys(test_app, test_database):
+    client = test_app.test_client()
+    resp = client.put(
+        "/users/1",
+        data=json.dumps({"email": "hajar@gmail.com"}),
+        content_type = "application/json",
+    )
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 400
+    assert "Input payload validation failed" in data['message']
+
+
+def test_update_user_does_not_exist(test_app, test_database):
+    client = test_app.test_client()
+    resp = client.put(
+        "/users/999",
+        data=json.dumps({"username": "sara", "email": "sara@gmail.com"}),
+        content_type = "application/json",
+    )
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 404
+    assert "User 999 does not exist" in data["message"]
