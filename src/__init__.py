@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 # import sys 
 
 
-# instantiate the database
+# instantiate the database without parameters
 db = SQLAlchemy()
 
 def create_app(script_info=None):
@@ -14,9 +14,10 @@ def create_app(script_info=None):
     # set the configuration
     app_settings = os.getenv('APP_SETTINGS')
     app.config.from_object(app_settings)
+    
     # Check if the proper config loaded: print(app.config, file=sys.stderr)
 
-    # set up extensions
+    # set up extensions. Tell SQLalchemy to link with our app via:
     db.init_app(app)
 
     # register blueprints
