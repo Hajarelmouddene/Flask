@@ -14,7 +14,7 @@ api = Api(ping_blueprint)
 
 class Ping(Resource):
     def get(self):
-        return {"status": "success", "message": "pong!"}
+        return {"status": "success", "message": "pong!!!!"}
 
 
 # add resource can be passed many URLs api.add_resource(Ping, "/ping", "/hello")
